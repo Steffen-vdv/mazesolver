@@ -38,7 +38,7 @@ class Maze:
 			if pixel_node.type == PixelNode.EMPTY and x == 0 and not hasattr(self, 'start_pixel_node'):
 				self.start_pixel_node = pixel_node
 			
-			# Set this maze's ending point to the first empty pixel we can find on the last row
+			# Set this maze's ending point to the first empty pixel we can find on the last row  (-1 to correct zero-based numbering)
 			if pixel_node.type == PixelNode.EMPTY and x == (height - 1):
 				self.end_pixel_node = pixel_node
 				
@@ -48,9 +48,15 @@ class Maze:
 		if not hasattr(self, 'end_pixel_node'):
 			raise ValueError("No maze exit point could be identified - they're all walls :o")
 	
-		self.debug_pixel_nodes_chronology_sanity()
+	def get_pixel_nodes(self):
+		return self.pixel_nodes
 
-
+	def get_start_pixel_node(self):
+		return self.start_pixel_node
+		
+	def get_end_pixel_node(self):
+		return self.end_pixel_node
+	
 	## DEBUGGING METHODS HENCEFORTH ##
 	
 	def debug_neighbour_sanity(self):
@@ -92,7 +98,9 @@ class Maze:
 			if node.x != last_x:
 				output += '\n'
 		
-			if node.type == PixelNode.WALL:
+			if hasattr(node, 'visited') and node.visited == True:
+				output += '-'
+			elif node.type == PixelNode.WALL:
 				output += 'X'
 			else:
 				output += ' '

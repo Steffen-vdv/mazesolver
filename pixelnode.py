@@ -20,6 +20,12 @@ class PixelNode:
 	def set_neighbour(self, side, neighbour_node = None):
 		self.neighbours[side] = neighbour_node
 	
+	def __eq__(self, other):
+		if not isinstance(other, PixelNode):
+			return NotImplementedError
+		
+		return self.x == other.x and self.y == other.y
+	
 	## DEBUGGING METHODS HENCEFORTH ##
 	
 	def get_neighbour(self, type):
