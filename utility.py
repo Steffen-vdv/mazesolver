@@ -13,3 +13,4 @@ class GenericUtility:
 			return file_path
 			
 		raise argparse.ArgumentTypeError("'%s' already exists" % file_path)
+		

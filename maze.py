@@ -27,7 +27,7 @@ class Maze:
 				raise ValueError("Invalid pixel color %s on coordinates %s, %s" % (pixel_greyscale, x, y))
 			
 			# Add this pixel node to the list
-			self.pixel_nodes[str(x) + "," + str(y)] = pixel_node
+			self.pixel_nodes[self.to_coord_str(x, y)] = pixel_node
 		
 		# Now that we've processed all nodes, set neighbours for each of these nodes
 		self.attach_neighbours()
@@ -58,7 +58,7 @@ class Maze:
 	def calculate_nodetype_scale(self, from_direction, to_direction, node_type):
 		current_successive_number = 0
 		lowest_successive_number = math.inf
-		current_node = self.pixel_nodes["0,0"]
+		current_node = self.pixel_nodes[self.to_coord_str(0, 0)]
 		traversal_direction = to_direction
 		
 		# If we're traversing columns - hop right when we reach the end of a column. If we're traversing rows, hop to the bottom when we reach the last node in the row.
@@ -106,7 +106,7 @@ class Maze:
 		
 		# Set the initial state that we'll be working with
 		new_pixel_nodes = {}
-		current_pixel_node_key = "0,0"
+		current_pixel_node_key = self.to_coord_str(0, 0)
 		initial_pixel_node = self.pixel_nodes[current_pixel_node_key]
 		node_width = self.maze_scale[initial_pixel_node.type]["x"]
 		node_height = self.maze_scale[initial_pixel_node.type]["y"]
@@ -124,7 +124,7 @@ class Maze:
 			
 			# Create a new node for the new_x and new_y. new_x and new_y are not physical-pixel-based but node-based instead.
 			# Retain the original pixel values to be able to convert back into an image later.
-			new_node_key = str(new_x) + "," + str(new_y)
+			new_node_key = self.to_coord_str(new_x, new_y)
 			
 			new_pixel_node = PixelNode(new_x, new_y, node_width, node_height, pixel_node.type)
 			new_pixel_node.set_original_pixel_values(pixel_x, pixel_y)
@@ -154,7 +154,7 @@ class Maze:
 				node_width = wall_width if node_width == empty_width else empty_width
 				
 			# Move on to the next pixel-of-interest.
-			current_pixel_node_key = str(pixel_x) + "," + str(pixel_y)
+			current_pixel_node_key = self.to_coord_str(pixel_x, pixel_y)
 		
 		self.pixel_nodes = new_pixel_nodes
 		
@@ -168,12 +168,12 @@ class Maze:
 			# Attach previously processed neigbours (top and left) to this new pixel_node as neighbour
 			# Attach this new pixel_node to previously processed neighbours (right and bottom) as neighbour
 			if pixel_node.x > 0:
-				left_neighbour = self.pixel_nodes[str(pixel_node.x - 1) + "," + str(pixel_node.y)]
+				left_neighbour = self.pixel_nodes[self.to_coord_str(pixel_node.x - 1, pixel_node.y)]
 				
 				pixel_node.set_neighbour("left", left_neighbour)
 				left_neighbour.set_neighbour("right", pixel_node)
 			if pixel_node.y > 0:
-				top_neighbour = self.pixel_nodes[str(pixel_node.x) + "," + str(pixel_node.y - 1)]
+				top_neighbour = self.pixel_nodes[self.to_coord_str(pixel_node.x, pixel_node.y - 1)]
 				
 				pixel_node.set_neighbour("top", top_neighbour)
 				top_neighbour.set_neighbour("bottom", pixel_node)
@@ -196,6 +196,9 @@ class Maze:
 				break
 				
 			current_node = current_node.get_neighbour("left")
+	
+	def to_coord_str(self, x, y):
+		return str(x) + "," + str(y)
 	
 	def get_pixel_nodes(self):
 		return self.pixel_nodes

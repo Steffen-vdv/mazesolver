@@ -25,7 +25,7 @@ class PixelNode:
 	def set_original_pixel_values(self, original_x, original_y):
 		self.original_x = original_x
 		self.original_y = original_y
-	
+		
 	def __eq__(self, other):
 		if not isinstance(other, PixelNode):
 			return NotImplementedError
