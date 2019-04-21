@@ -8,9 +8,10 @@ class Maze:
 		self.pixel_nodes = []
 		
 		for index, pixel_greyscale in enumerate(pixel_data):
-			x = int(index / width)
-			y = index % width
+			x = index % width
+			y = int(index / width)
 			
+			# Consider black pixels to be walls, consider white pixels to be traversable space
 			if pixel_greyscale == 0:
 				pixel_node = PixelNode(x, y, PixelNode.WALL)
 			elif pixel_greyscale == 255:
@@ -20,12 +21,12 @@ class Maze:
 			
 			# Attach previously processed neigbours (top and left) to this new pixel_node as neighbour
 			# Attach this new pixel_node to previously processed neighbours (right and bottom) as neighbour
-			if y > 0:
+			if x > 0:
 				left_neighbour = self.pixel_nodes[index - 1]
 				
 				pixel_node.set_neighbour("left", left_neighbour)
 				left_neighbour.set_neighbour("right", pixel_node)
-			if x > 0:
+			if y > 0:
 				top_neighbour = self.pixel_nodes[index - width]
 				
 				pixel_node.set_neighbour("top", top_neighbour)
@@ -35,17 +36,17 @@ class Maze:
 			self.pixel_nodes.append(pixel_node)
 			
 			# Set this maze's starting point to the first empty pixel we can find on the first row
-			if pixel_node.type == PixelNode.EMPTY and x == 0 and not hasattr(self, 'start_pixel_node'):
+			if pixel_node.type == PixelNode.EMPTY and y == 0 and not hasattr(self, 'start_pixel_node'):
 				self.start_pixel_node = pixel_node
 			
 			# Set this maze's ending point to the first empty pixel we can find on the last row  (-1 to correct zero-based numbering)
-			if pixel_node.type == PixelNode.EMPTY and x == (height - 1):
+			if pixel_node.type == PixelNode.EMPTY and y == (height - 1):
 				self.end_pixel_node = pixel_node
 				
-		if not hasattr(self, 'start_pixel_node'):
+		if not hasattr(self, "start_pixel_node"):
 			raise ValueError("No maze entrypoint could be identified - they're all walls :o")
 	
-		if not hasattr(self, 'end_pixel_node'):
+		if not hasattr(self, "end_pixel_node"):
 			raise ValueError("No maze exit point could be identified - they're all walls :o")
 	
 	def get_pixel_nodes(self):
@@ -57,14 +58,17 @@ class Maze:
 	def get_end_pixel_node(self):
 		return self.end_pixel_node
 	
-	## DEBUGGING METHODS HENCEFORTH ##
+	## HACKY DEBUGGING METHODS HENCEFORTH ##
 	
 	def debug_neighbour_sanity(self):
 		output_list = [[]]
 		node = self.pixel_nodes[0]
 		node_traversal_direction = "right"
+		
 		while True:
-			if node.type == PixelNode.WALL:
+			if hasattr(node, "visited") and node.visited == True:
+				output = "-"
+			elif node.type == PixelNode.WALL:
 				output = 'X'
 			else:
 				output = ' '
@@ -87,7 +91,7 @@ class Maze:
 		
 		full_output = ''
 		for line_char_list in output_list:
-			full_output += ''.join(line_char_list) + '\n'
+			full_output += ''.join(line_char_list) + "\n"
 			
 		print (full_output)
 	
@@ -96,14 +100,14 @@ class Maze:
 		last_x = 0
 		for node in self.pixel_nodes:
 			if node.x != last_x:
-				output += '\n'
+				output += "\n"
 		
-			if hasattr(node, 'visited') and node.visited == True:
-				output += '-'
+			if hasattr(node, "visited") and node.visited == True:
+				output += "-"
 			elif node.type == PixelNode.WALL:
-				output += 'X'
+				output += "X"
 			else:
-				output += ' '
+				output += " "
 				
 			last_x = node.x
 		

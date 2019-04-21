@@ -15,8 +15,8 @@ def get_arguments():
 	return parser.parse_args()
 
 		
-def solve_maze(input_image, output_image, solve_method):
-	image = Image.open(input_image)
+def solve_maze(input_image_path, solve_method):
+	image = Image.open(input_image_path)
 	
 	image_width = image.size[0]
 	image_height = image.size[1]
@@ -26,20 +26,40 @@ def solve_maze(input_image, output_image, solve_method):
 	# This means we only expect 0 or 255 as values, anything else is invalid as per business rules
 	maze_pixel_data = list(image.getdata(0))
 	
+	# Construct the maze, which will create a model for the playingfield, including all squares and their neighbours 
 	maze = Maze(image_width, image_height, maze_pixel_data)
 	
+	# Construct the solver based on the input method
 	solveFactory = SolverFactory()
 	solver = solveFactory.create(solve_method)
 	
-	path = solver.solve(maze)
+	# Solve the maze and return the result
+	return solver.solve(maze)
 	
+def handle_maze_solution(path, original_image_path, output_image_path):
+	image = Image.open(original_image_path)
+	
+	# Maze could not be solved, exit immediately
+	if path == False:
+		print ("Maze could not be solved :-(")
+		return False
+		
+	# Create a new image based on the input image and load the image pixel data
+	image = image.convert("RGB")
+	image_pixel_data = image.load()
+	
+	# Draw the path in the image as red pixels
 	for node in path:
-		print (str(node.x) + ',' + str(node.y))
+		image_pixel_data[node.x, node.y] = (255, 0, 0)
+		
+	# Save the image to the path given path
+	image.save(output_image_path, "PNG")
 	
 def main():
 	try:
 		args = get_arguments()
-		solve_maze(args.input, args.output, args.method)
+		path = solve_maze(args.input, args.method)
+		handle_maze_solution(path, args.input, args.output)
 	except Exception as e: 
 		print (e.strerror)		
 	
