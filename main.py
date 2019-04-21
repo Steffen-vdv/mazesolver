@@ -1,4 +1,5 @@
 import argparse
+import math
 
 from maze import Maze
 from PIL import Image
@@ -49,8 +50,19 @@ def handle_maze_solution(path, original_image_path, output_image_path):
 	image_pixel_data = image.load()
 	
 	# Draw the path in the image as red pixels
+	red_intensity = 255
+	green_intensity = 0
+	intensity_increase = 255 / len(path)
 	for node in path:
-		image_pixel_data[node.x, node.y] = (255, 0, 0)
+		for x in range(node.original_x, node.original_x + node.width):
+			for y in range(node.original_y, node.original_y + node.height):
+				image_pixel_data[x, y] = (int(red_intensity), int(green_intensity), 0)
+				
+		if green_intensity < 255:
+			green_intensity += intensity_increase * 2.2
+		else:
+			red_intensity -= intensity_increase * 2.2
+		
 		
 	# Save the image to the path given path
 	image.save(output_image_path, "PNG")

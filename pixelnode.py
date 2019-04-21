@@ -2,11 +2,13 @@ class PixelNode:
 	WALL = "wall"
 	EMPTY = "empty"
 	
-	def __init__(self, x, y, type):
+	def __init__(self, x, y, width, height, type):
 		self.validate(x, y, type)
 		
 		self.x = x
 		self.y = y
+		self.width = width
+		self.height = height
 		self.type = type
 		self.neighbours = { "top": None, "right": None, "bottom": None, "left": None }
 	
@@ -20,11 +22,18 @@ class PixelNode:
 	def set_neighbour(self, side, neighbour_node = None):
 		self.neighbours[side] = neighbour_node
 	
+	def set_original_pixel_values(self, original_x, original_y):
+		self.original_x = original_x
+		self.original_y = original_y
+	
 	def __eq__(self, other):
 		if not isinstance(other, PixelNode):
 			return NotImplementedError
 		
 		return self.x == other.x and self.y == other.y
+		
+	def __str__(self):
+		return "Model: " + str(self.x) + "," + str(self.y) + " -- Original: " + str(self.original_x) + "," + str(self.original_y) + " -- Type: " + self.type
 	
 	## DEBUGGING METHODS HENCEFORTH ##
 	

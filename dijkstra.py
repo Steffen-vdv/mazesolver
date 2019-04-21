@@ -25,8 +25,8 @@ class Dijkstra:
 		destination_node = maze.get_end_pixel_node()
 		
 		# Construct an initial state - no node has been visited and every node, apart from the initial node, gets a default infinite distance from the initial node
-		for node in nodes:
-			node.distance = math.inf
+		for key, node in nodes.items():
+			node.distance = math.inf	
 			node.visited = False
 		
 		initial_node.distance = 0
@@ -79,6 +79,6 @@ class Dijkstra:
 		return False
 		
 	def cleanup(self, nodes):
-		for node in nodes:
+		for key, node in nodes.items():
 			node.visited = None
 			node.distance = None
