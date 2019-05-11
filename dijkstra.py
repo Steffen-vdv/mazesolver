@@ -1,6 +1,6 @@
 import time
 import math
-from pixelnode import PixelNode
+from node import Node
 
 class Dijkstra:
 	def __init__(self):
@@ -20,9 +20,9 @@ class Dijkstra:
 	## Very basic implementation of Dijkstra's Algorithm. 
 	## For in-depth information, see: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 	def solve(self, maze):
-		nodes = maze.get_pixel_nodes()
-		initial_node = maze.get_start_pixel_node()
-		destination_node = maze.get_end_pixel_node()
+		nodes = maze.get_nodes()
+		initial_node = maze.get_start_node()
+		destination_node = maze.get_end_node()
 		
 		# Construct an initial state - no node has been visited and every node, apart from the initial node, gets a default infinite distance from the initial node
 		for key, node in nodes.items():
@@ -41,7 +41,7 @@ class Dijkstra:
 			
 			for side, neighbour in neighbours.items():
 				# Ignore non-existant neighbours, walls and nodes that have already been visited
-				if not neighbour or neighbour.type == PixelNode.WALL or neighbour.visited == True:
+				if not neighbour or neighbour.type == Node.WALL or neighbour.visited == True:
 					continue
 				
 				# Calculate the new distance and set this distance if it's lower than the last set distance for this path
@@ -68,7 +68,7 @@ class Dijkstra:
 			
 			current_node = smallest_distance_node
 		
-		# Clean up all dynamically added object attributes from the PixelNode objects
+		# Clean up all dynamically added object attributes from the Node objects
 		self.cleanup(nodes)
 		
 		# Sha-bang - We found a solution! Return the path for the caller to handle

@@ -1,20 +1,20 @@
 from itertools import filterfalse
 import math
 import copy
-from pixelnode import PixelNode
+from node import Node
 
 class Maze:
 	GREYSCALE_NODETYPES = {
-		0: PixelNode.WALL,
-		255: PixelNode.EMPTY
+		0: Node.WALL,
+		255: Node.EMPTY
 	};
 
 	def __init__(self, width, height, pixel_data):
 		if len(pixel_data) != width * height:
 			raise ValueError("Invalid construction of Maze class: Pixel data length does not equal width * height")
 		
-		self.pixel_nodes = {}
-		self.maze_scale = {	type: {"x": math.inf, "y": math.inf} for type in PixelNode.get_all_node_types()	}
+		self.nodes = {}
+		self.maze_scale = {	type: {"x": math.inf, "y": math.inf} for type in Node.get_all_node_types()	}
 		self.maze_scale["field"] = {"width": width, "height": height}
 		
 		# Calculate the scaling of the maze nodes (walls, traversable field) by assessing the ENTIRE maze. @TODO Could probably improve efficiency here
@@ -29,9 +29,9 @@ class Maze:
 		# Furthermore: Start and stop positions have to be on the top and bottom, respectively.
 		self.set_maze_start_end(start_end_data)
 		
-		if not hasattr(self, "start_pixel_node"):
+		if not hasattr(self, "start_node"):
 			raise ValueError("No maze entrypoint could be identified - they're all walls :o")
-		if not hasattr(self, "end_pixel_node"):
+		if not hasattr(self, "end_node"):
 			raise ValueError("No maze exit point could be identified - they're all walls :o") 	
 	
 	@staticmethod
@@ -61,10 +61,10 @@ class Maze:
 	
 	def calculate_maze_scale(self, axis, pixel_data, transposition_length):
 		# Assume we always start out with a wall at the left top
-		prev_node_type = PixelNode.WALL
+		prev_node_type = Node.WALL
 		prev_counter_axis_coord = 0
 		
-		scale_by_type = { type:1 for type in PixelNode.get_all_node_types() }
+		scale_by_type = { type:1 for type in Node.get_all_node_types() }
 		
 		# We only support 2-D mazes, so this is easy!
 		counter_axis = "y" if axis == "x" else "x"
@@ -95,6 +95,8 @@ class Maze:
 	def set_maze_scale(self, pixel_data):
 		width = self.maze_scale["field"]["width"]
 		
+		# Interpret the maze row-by-row, then column-by-column (after transposition)
+		# Stores the minimum node sizes for each node type in self.maze_scale, to create Node objects from
 		self.calculate_maze_scale("x", pixel_data, width)
 		y_transposed_pixel_data = self.transpose_pixel_data(pixel_data, width)
 		self.calculate_maze_scale("y", y_transposed_pixel_data, width)
@@ -104,15 +106,15 @@ class Maze:
 		field_width = self.maze_scale["field"]["width"]
 		field_height = self.maze_scale["field"]["height"]
 		
-		wall_width = self.maze_scale[PixelNode.WALL]["x"]
-		wall_height = self.maze_scale[PixelNode.WALL]["y"]
+		wall_width = self.maze_scale[Node.WALL]["x"]
+		wall_height = self.maze_scale[Node.WALL]["y"]
 		
-		empty_width = self.maze_scale[PixelNode.EMPTY]["x"]
-		empty_height = self.maze_scale[PixelNode.EMPTY]["y"]
+		empty_width = self.maze_scale[Node.EMPTY]["x"]
+		empty_height = self.maze_scale[Node.EMPTY]["y"]
 		
 		# Assumption that 0,0 will always be a wall!
-		node_width = self.maze_scale[PixelNode.WALL]["x"]
-		node_height = self.maze_scale[PixelNode.WALL]["y"]
+		node_width = self.maze_scale[Node.WALL]["x"]
+		node_height = self.maze_scale[Node.WALL]["y"]
 		
 		# The X/Y coordinates for the node model, which will differ significantly (but relate to) the pixel coordinates
 		model_x = 0
@@ -133,10 +135,10 @@ class Maze:
 			# Retain the original pixel values to be able to convert back into an image later.
 			type = self.get_node_type_by_pixel_greyscale(pixel_greyscale)
 			
-			pixel_node = PixelNode(model_x, model_y, node_width, node_height, type)
-			pixel_node.set_original_pixel_values(x, y)
+			node = Node(model_x, model_y, node_width, node_height, type)
+			node.set_original_pixel_values(x, y)
 			
-			self.pixel_nodes[new_node_key] = pixel_node
+			self.nodes[new_node_key] = node
 			
 			# Skip all other pixels that are within this node's width, we only want 1 node object regardless of the # of pixels it is represented by
 			pixel_index += node_width
@@ -165,31 +167,31 @@ class Maze:
 			prev_y = new_y
 		
 		return {
-			"initial": self.pixel_nodes["0,0"], 
-			"final": self.pixel_nodes[new_node_key]
+			"initial": self.nodes["0,0"], 
+			"final": self.nodes[new_node_key]
 		} 
 			
 	def attach_neighbours(self):
-		for key, pixel_node in self.pixel_nodes.items():	
-			# Attach previously processed neigbours (top and left) to this new pixel_node as neighbour
-			# Attach this new pixel_node to previously processed neighbours (right and bottom) as neighbour
-			if pixel_node.x > 0:
-				left_neighbour = self.pixel_nodes[self.to_coord_str(pixel_node.x - 1, pixel_node.y)]
+		for key, node in self.nodes.items():	
+			# Attach previously processed neigbours (top and left) to this new node as neighbour
+			# Attach this new node to previously processed neighbours (right and bottom) as neighbour
+			if node.x > 0:
+				left_neighbour = self.nodes[self.to_coord_str(node.x - 1, node.y)]
 				
-				pixel_node.set_neighbour("left", left_neighbour)
-				left_neighbour.set_neighbour("right", pixel_node)
-			if pixel_node.y > 0:
-				top_neighbour = self.pixel_nodes[self.to_coord_str(pixel_node.x, pixel_node.y - 1)]
+				node.set_neighbour("left", left_neighbour)
+				left_neighbour.set_neighbour("right", node)
+			if node.y > 0:
+				top_neighbour = self.nodes[self.to_coord_str(node.x, node.y - 1)]
 				
-				pixel_node.set_neighbour("top", top_neighbour)
-				top_neighbour.set_neighbour("bottom", pixel_node)
+				node.set_neighbour("top", top_neighbour)
+				top_neighbour.set_neighbour("bottom", node)
 		
 	def set_maze_start_end(self, start_end_data):
 		# Set this maze's starting point to the first empty node (left-to-right) we can find on the first row
 		current_node = start_end_data["initial"]
 		while current_node:
-			if current_node.type == PixelNode.EMPTY:
-				self.start_pixel_node = current_node
+			if current_node.type == Node.EMPTY:
+				self.start_node = current_node
 				break
 				
 			current_node = current_node.get_neighbour("right")
@@ -197,8 +199,8 @@ class Maze:
 		# Set this maze's end point to the first empty node (right-to-left) we can find on the last row
 		current_node = start_end_data["final"]
 		while current_node:
-			if current_node.type == PixelNode.EMPTY:
-				self.end_pixel_node = current_node
+			if current_node.type == Node.EMPTY:
+				self.end_node = current_node
 				break
 				
 			current_node = current_node.get_neighbour("left")
@@ -206,26 +208,26 @@ class Maze:
 	def to_coord_str(self, x, y):
 		return str(x) + "," + str(y)
 	
-	def get_pixel_nodes(self):
-		return self.pixel_nodes
+	def get_nodes(self):
+		return self.nodes
 
-	def get_start_pixel_node(self):
-		return self.start_pixel_node
+	def get_start_node(self):
+		return self.start_node
 		
-	def get_end_pixel_node(self):
-		return self.end_pixel_node
+	def get_end_node(self):
+		return self.end_node
 	
 	## HACKY DEBUGGING METHODS HENCEFORTH ##
 	
 	def debug_neighbour_sanity(self):
 		output_list = [[]]
-		node = self.pixel_nodes["0,0"]
+		node = self.nodes["0,0"]
 		node_traversal_direction = "right"
 		
 		while True:
 			if hasattr(node, "visited") and node.visited == True:
 				output = "-"
-			elif node.type == PixelNode.WALL:
+			elif node.type == Node.WALL:
 				output = 'X'
 			else:
 				output = ' '
@@ -252,16 +254,16 @@ class Maze:
 			
 		print (full_output)
 	
-	def debug_pixel_nodes_chronology_sanity(self):
+	def debug_nodes_chronology_sanity(self):
 		output = ''
 		last_y = 0
-		for key, node in self.pixel_nodes.items():
+		for key, node in self.nodes.items():
 			if node.y != last_y:
 				output += "\n"
 		
 			if hasattr(node, "visited") and node.visited == True:
 				output += "-"
-			elif node.type == PixelNode.WALL:
+			elif node.type == Node.WALL:
 				output += "X"
 			else:
 				output += " "

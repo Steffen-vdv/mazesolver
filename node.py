@@ -1,10 +1,10 @@
-class PixelNode:
+class Node:
 	WALL = "wall"
 	EMPTY = "empty"
 	
 	@staticmethod
 	def get_all_node_types():
-		return [PixelNode.WALL, PixelNode.EMPTY]
+		return [Node.WALL, Node.EMPTY]
 	
 	def __init__(self, x, y, width, height, type):
 		self.validate(x, y, type)
@@ -31,7 +31,7 @@ class PixelNode:
 		self.original_y = original_y
 		
 	def __eq__(self, other):
-		if not isinstance(other, PixelNode):
+		if not isinstance(other, Node):
 			return NotImplementedError
 		
 		return self.x == other.x and self.y == other.y
