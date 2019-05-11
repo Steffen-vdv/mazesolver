@@ -2,6 +2,10 @@ class PixelNode:
 	WALL = "wall"
 	EMPTY = "empty"
 	
+	@staticmethod
+	def get_all_node_types():
+		return [PixelNode.WALL, PixelNode.EMPTY]
+	
 	def __init__(self, x, y, width, height, type):
 		self.validate(x, y, type)
 		
