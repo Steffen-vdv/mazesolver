@@ -47,8 +47,6 @@ class Maze:
 		# Furthermore: Start and stop positions have to be on the top and bottom, respectively.
 		self.set_maze_start_end(start_end_data)
 		
-		print (self.end_pixel_node)
-		
 		if not hasattr(self, "start_pixel_node"):
 			raise ValueError("No maze entrypoint could be identified - they're all walls :o")
 	

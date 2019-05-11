@@ -1,4 +1,5 @@
 from dijkstra import Dijkstra;
+from astar import AStar;
 
 class SolverFactory:
 	def create(self, method_name):
