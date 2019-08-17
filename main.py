@@ -1,8 +1,8 @@
 import argparse
 import math
 
-from maze import Maze
 from PIL import Image
+from maze import Maze
 from utility import GenericUtility
 from factory import SolverFactory
 
@@ -71,6 +71,7 @@ def main():
 	try:
 		args = get_arguments()
 		path = solve_maze(args.input, args.method)
+		
 		handle_maze_solution(path, args.input, args.output)
 	except Exception as e: 
 		print (e.strerror)		

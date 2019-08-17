@@ -22,9 +22,6 @@ class Maze:
 		
 		start_end_data = self.create_nodes(pixel_data)
 		
-		# Now that we've processed all nodes, set neighbours for each of these nodes
-		self.attach_neighbours()
-		
 		# Set the start- and end position of the maze, we only support exactly one start and exactly one stop location and passively ignore anything else.
 		# Furthermore: Start and stop positions have to be on the top and bottom, respectively.
 		self.set_maze_start_end(start_end_data)
@@ -39,7 +36,8 @@ class Maze:
 		if greyscale in Maze.GREYSCALE_NODETYPES:
 			return Maze.GREYSCALE_NODETYPES[greyscale]
 		
-		raise ValueError("Unidentified greyscale color " + str(greyscale) + ", supported colors are: " + Maze.GREYSCALE_NODETYPES.keys())
+		return Node.WALL
+		#raise ValueError("Unidentified greyscale color " + str(greyscale) + ", supported colors are: " + ', '.join(str(x) for x in Maze.GREYSCALE_NODETYPES.keys()))
 	
 	def transpose_pixel_data(self, pixel_data, transposition_length):
 		# Transpose the pixel data to enable iterating column by column
@@ -140,6 +138,19 @@ class Maze:
 			
 			self.nodes[new_node_key] = node
 			
+			# Attach neighbouring nodes
+			left_neighbour_key = self.to_coord_str(model_x - 1, model_y)
+			if left_neighbour_key in self.nodes:
+				left_neighbour = self.nodes[left_neighbour_key]
+				left_neighbour.set_neighbour("right", node)
+				node.set_neighbour("left", left_neighbour)
+				
+			top_neighbour_key = self.to_coord_str(model_x, model_y - 1)
+			if top_neighbour_key in self.nodes:
+				top_neighbour = self.nodes[top_neighbour_key]
+				top_neighbour.set_neighbour("bottom", node)
+				node.set_neighbour("top", top_neighbour)
+			
 			# Skip all other pixels that are within this node's width, we only want 1 node object regardless of the # of pixels it is represented by
 			pixel_index += node_width
 			
@@ -170,22 +181,7 @@ class Maze:
 			"initial": self.nodes["0,0"], 
 			"final": self.nodes[new_node_key]
 		} 
-			
-	def attach_neighbours(self):
-		for key, node in self.nodes.items():	
-			# Attach previously processed neigbours (top and left) to this new node as neighbour
-			# Attach this new node to previously processed neighbours (right and bottom) as neighbour
-			if node.x > 0:
-				left_neighbour = self.nodes[self.to_coord_str(node.x - 1, node.y)]
-				
-				node.set_neighbour("left", left_neighbour)
-				left_neighbour.set_neighbour("right", node)
-			if node.y > 0:
-				top_neighbour = self.nodes[self.to_coord_str(node.x, node.y - 1)]
-				
-				node.set_neighbour("top", top_neighbour)
-				top_neighbour.set_neighbour("bottom", node)
-		
+
 	def set_maze_start_end(self, start_end_data):
 		# Set this maze's starting point to the first empty node (left-to-right) we can find on the first row
 		current_node = start_end_data["initial"]
